@@ -52,9 +52,9 @@ def eliminate(values, s, d):
   ## (1) If a square s is reduced to one value d2, then eliminate d2 from the peers.
   if len(values[s]) == 0:
     return False ## Contradiction: removed last value
-  elif len(values[s]) == 1:
+  elif len(values[s]) == 1: # si la longitud es igual a uno, significa que esa es su solución
     d2 = values[s]
-    if not all(eliminate(values, s2, d2) for s2 in peers[s]):
+    if not all(eliminate(values, s2, d2) for s2 in peers[s]): # elimina el valor de d2 de los demás cuadros
       return False
   ## (2) If a unit u is reduced to only one place for a value d, then put it there.
   for u in units[s]:
@@ -89,6 +89,7 @@ def search(values):
   ## Chose the unfilled square s with the fewest possibilities
   n, s = max((len(values[s]), s) for s in squares if len(values[s]) > 1)
   return some(search(assign(values.copy(), s, d)) for d in values[s])
+  # return some(search(assign(values.copy(), s, d)) for d in shuffled(values[s]))
 
 def some(seq):
   "Return some element of seq that is true."
@@ -125,6 +126,25 @@ def solved(values):
     return set(values[s] for s in unit) == set(digits)
   return values is not False and all(unitsolved(unit) for unit in unitlist)
 
+def random_puzzle(N = 17):
+  """Make a random puzzle with N or more assignments. Restart on contradictions.
+  Note the resulting puzzle is not guaranteed to be solvable, but empirically
+  about 99.8% of them are solvable. Some have multiple solutions."""
+  values = dict((s, digits) for s in squares)
+  for s in shuffled(squares):
+    if not assign(values, s, random.choice(values[s])):
+      break
+    ds = [values[s] for s in squares if len(values[s]) == 1]
+    if len(ds) >= N and len(set(ds)) >= 8:
+      return str(values[s] if len(values[s])==1 else '.' for s in squares)
+  return random_puzzle(N) ## Give up and make a new puzzle
+
+def shuffled(seq):
+  "Return a randomly shuffled copy of the input sequence."
+  seq = list(seq)
+  random.shuffle(seq)
+  return seq
+
 easy_grid =     '8.912.7.4.......8956..4..........6.71.62578.34.2..........8..3172.......9.1.324.6'
 medium_grid =   '27..8.........7....415...79.9.62..34...453...42..78.1.91...628....8.........4..91'
 hard_grid =     '7..8.........246.3..1..6..2.58..9....3.....4....4..81.8..5..4..2.594.........8..7'
@@ -138,4 +158,5 @@ if __name__ == '__main__':
   solve_all([hard_grid],    "hard",     None)
   solve_all([evil_grid],    "evil",     None)
   solve_all([hardest_grid], "hardest",  None)
-  solve_all([profe_grid], "hardest",  None)
+  solve_all([profe_grid],   "profe",    None)
+
